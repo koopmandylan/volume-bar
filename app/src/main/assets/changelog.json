@@ -1,4 +1,5 @@
 [
+  {"version": "1.7", "code": 8, "notes": "Buttons mode pill gets a drag grip: move it from the handle on its left edge."},
   {"version": "1.6", "code": 7, "notes": "Startup crash diagnostics: if the app ever fails to open, it now shows the error on screen instead of just closing."},
   {"version": "1.5", "code": 6, "notes": "Settings section (bar or +/- buttons, opacity, haptics, dark/light theme), in-app changelog with what's-new popup. Settings survive updates."},
   {"version": "1.4", "code": 5, "notes": "Opacity slider goes to 0%: fully invisible bar that still responds to tap, drag and long-press."},

@@ -330,9 +330,12 @@ class FloatingVolumeService : Service() {
             stopSelf()
         }
 
-        // Drag from the pill background; buttons keep their own taps.
+        // Drag from the grip handle; buttons keep their own taps.
+        // (Buttons consume touches on themselves, so the container
+        // listener would never fire under them.)
         val slop = ViewConfiguration.get(this).scaledTouchSlop
-        floatingView.setOnTouchListener(object : View.OnTouchListener {
+        floatingView.findViewById<View>(R.id.dragHandle)
+            .setOnTouchListener(object : View.OnTouchListener {
             var downRawX = 0
             var downRawY = 0
             var initX = 0

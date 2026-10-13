@@ -38,7 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="16dp"
-                android:text="Tap Show, allow overlay, then:\n• Tap = system volume slider\n• Drag = move (snaps to edge)\n• Long-press = hide"
+                android:text="Tap Show, allow overlay, then:\n• Tap = system volume slider\n• Drag = move (snaps to edge)\n• Long-press = hide\n• Buttons mode: drag from the ⋮ grip"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:lineSpacingExtra="4dp" />
 

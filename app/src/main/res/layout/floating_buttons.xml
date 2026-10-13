@@ -6,6 +6,17 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
+    <TextView
+        android:id="@+id/dragHandle"
+        android:layout_width="40dp"
+        android:layout_height="56dp"
+        android:gravity="center"
+        android:text="⋮"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#AAAAAA"
+        android:layout_marginEnd="4dp" />
+
     <Button
         android:id="@+id/btnVolDown"
         android:layout_width="56dp"
