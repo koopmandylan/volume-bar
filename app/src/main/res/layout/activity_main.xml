@@ -15,17 +15,17 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Volume Dock"
+            android:text="Volume Bar"
             android:textAppearance="?attr/textAppearanceHeadlineSmall"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="One floating button for your broken keys"
+            android:text="One floating control for broken keys"
             android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="16dp" />
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -38,7 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="16dp"
-                android:text="Tap Show, allow overlay, then:\n• Tap bar = system volume slider\n• Drag bar = move it, snaps to edge\n• Long-press bar = hide it"
+                android:text="Tap Show, allow overlay, then:\n• Tap = system volume slider\n• Drag = move (snaps to edge)\n• Long-press = hide"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:lineSpacingExtra="4dp" />
 
@@ -47,7 +47,7 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            android:layout_marginBottom="16dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="2dp">
 
@@ -60,15 +60,51 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Dock opacity (0% = invisible, still works)"
+                    android:text="Settings"
+                    android:textAppearance="?attr/textAppearanceTitleLarge"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Floating control"
                     android:textAppearance="?attr/textAppearanceTitleSmall"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="4dp" />
+
+                <RadioGroup
+                    android:id="@+id/modeGroup"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp">
+
+                    <com.google.android.material.radio.MaterialRadioButton
+                        android:id="@+id/modeBar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Edge bar (default)" />
+
+                    <com.google.android.material.radio.MaterialRadioButton
+                        android:id="@+id/modeButtons"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Buttons (+ / −)" />
+
+                </RadioGroup>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Opacity (0% = invisible, still works)"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:layout_marginBottom="4dp" />
 
                 <LinearLayout
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp">
 
                     <SeekBar
                         android:id="@+id/opacitySeek"
@@ -86,6 +122,46 @@
                         android:layout_marginStart="12dp" />
 
                 </LinearLayout>
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/hapticsSwitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Haptic feedback"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Theme"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:layout_marginBottom="4dp" />
+
+                <RadioGroup
+                    android:id="@+id/themeGroup"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.radio.MaterialRadioButton
+                        android:id="@+id/themeDark"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Dark (default)" />
+
+                    <com.google.android.material.radio.MaterialRadioButton
+                        android:id="@+id/themeLight"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Light" />
+
+                    <com.google.android.material.radio.MaterialRadioButton
+                        android:id="@+id/themeSystem"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Follow system" />
+
+                </RadioGroup>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -94,14 +170,24 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            android:text="Show dock"
+            android:text="Show"
             app:cornerRadius="12dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnStop"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
             android:text="Hide"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            app:cornerRadius="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnChangelog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:text="Changelog"
             style="@style/Widget.Material3.Button.OutlinedButton"
             app:cornerRadius="12dp" />
 
@@ -109,7 +195,6 @@
             android:id="@+id/btnUpdate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
             android:text="Check for updates"
             style="@style/Widget.Material3.Button.TextButton" />
 

@@ -1,1 +1,1 @@
-{"notes": "Opacity slider now goes to 0%: fully invisible bar that still responds to tap, drag and long-press.", "apkUrl": "https://github.com/koopmandylan/volume-bar/releases/download/v1.4/app.apk", "versionCode": 5, "versionName": "1.4"}
+{"notes": "Settings section (bar or +/- buttons, opacity, haptics, dark/light theme), in-app changelog with what's-new popup. Settings survive updates.", "apkUrl": "https://github.com/koopmandylan/volume-bar/releases/download/v1.5/app.apk", "versionCode": 6, "versionName": "1.5"}

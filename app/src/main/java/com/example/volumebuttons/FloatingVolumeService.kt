@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.media.AudioManager
@@ -30,37 +31,69 @@ import kotlin.math.min
 class FloatingVolumeService : Service() {
 
     companion object {
-        const val ACTION_UPDATE_OPACITY = "com.example.volumebuttons.UPDATE_OPACITY"
+        const val ACTION_UPDATE = "com.example.volumebuttons.UPDATE"
+
+        // Self-update feed: static file on GitHub, https only.
+        const val UPDATE_URL =
+            "https://raw.githubusercontent.com/koopmandylan/volume-bar/main/version.json"
+
+        // Single prefs file + stable keys: Android keeps app data on
+        // update, so settings survive every future version.
         const val PREFS = "dock_prefs"
-        const val KEY_OPACITY = "opacity" // 0..100, 0 = invisible but still tappable
+        const val KEY_OPACITY = "opacity" // 0..100, 0 = invisible but tappable
+        const val KEY_MODE = "mode" // "bar" or "buttons"
+        const val KEY_HAPTICS = "haptics"
+        const val KEY_THEME = "theme" // "system", "dark", "light"
+        const val KEY_LAST_SEEN = "last_seen_code"
         const val DEFAULT_OPACITY = 85
 
         @Volatile
         var isRunning = false
 
-        fun opacityOf(context: Context): Float {
-            val pct = context.getSharedPreferences(PREFS, MODE_PRIVATE)
-                .getInt(KEY_OPACITY, DEFAULT_OPACITY).coerceIn(0, 100)
-            return pct / 100f
-        }
+        fun prefsOf(context: Context): SharedPreferences =
+            context.getSharedPreferences(PREFS, MODE_PRIVATE)
+
+        fun opacityOf(context: Context): Float =
+            prefsOf(context).getInt(KEY_OPACITY, DEFAULT_OPACITY)
+                .coerceIn(0, 100) / 100f
+
+        fun hapticsOf(context: Context): Boolean =
+            prefsOf(context).getBoolean(KEY_HAPTICS, true)
     }
 
     private lateinit var windowManager: WindowManager
     private lateinit var floatingView: View
-    private lateinit var dock: Button
     private var params: WindowManager.LayoutParams? = null
-
-    // Touch-strip size in px (48dp x 160dp), used for edge snap math.
+    private lateinit var audio: AudioManager
+    private var currentMode = ""
     private var stripW = 0
     private var stripH = 0
+
+    private var isMuted = false
+    private var savedMusicVolume = -1
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_UPDATE_OPACITY && ::floatingView.isInitialized) {
-            floatingView.alpha = opacityOf(this)
+        if (intent?.action == ACTION_UPDATE && ::windowManager.isInitialized) {
+            ensureOverlay()
+            if (::floatingView.isInitialized) {
+                floatingView.alpha = opacityOf(this)
+            }
         }
         return START_STICKY
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        val p = params ?: return
+        if (!::floatingView.isInitialized) return
+        clampToScreen(p)
+        snapToEdge(p)
+        try {
+            windowManager.updateViewLayout(floatingView, p)
+        } catch (_: Exception) {
+        }
     }
 
     private fun screenSize(): DisplayMetrics {
@@ -70,7 +103,6 @@ class FloatingVolumeService : Service() {
         return metrics
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate() {
         super.onCreate()
 
@@ -86,21 +118,17 @@ class FloatingVolumeService : Service() {
 
         val notif = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Volume bar active")
-            .setContentText("Tap bar for volume slider. Long-press to hide.")
+            .setContentText("Tap for volume slider. Long-press to hide.")
             .setSmallIcon(android.R.drawable.sym_def_app_icon)
             .setOngoing(true)
             .build()
         startForeground(1, notif)
 
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        val audio = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audio = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val density = resources.displayMetrics.density
         stripW = (48 * density).toInt()
         stripH = (160 * density).toInt()
-
-        floatingView = LayoutInflater.from(this).inflate(R.layout.floating_overlay, null)
-        dock = floatingView.findViewById(R.id.btnDock)
-        floatingView.alpha = opacityOf(this)
 
         val metrics = screenSize()
         params = WindowManager.LayoutParams(
@@ -111,16 +139,58 @@ class FloatingVolumeService : Service() {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            // Start docked at the right edge, vertically centered.
             x = max(metrics.widthPixels - stripW, 0)
             y = max(metrics.heightPixels / 2 - stripH / 2, 0)
         }
 
-        windowManager.addView(floatingView, params)
+        ensureOverlay()
         isRunning = true
+    }
 
-        // Slim bar: tap = system volume slider, drag = move (snaps to
-        // nearest edge on release), long-press = hide.
+    /** Builds (or rebuilds on mode change) the overlay. Keeps position. */
+    private fun ensureOverlay() {
+        val p = params ?: return
+        val mode = prefsOf(this).getString(KEY_MODE, "bar") ?: "bar"
+        if (::floatingView.isInitialized && mode == currentMode) return
+        if (::floatingView.isInitialized) {
+            try {
+                windowManager.removeView(floatingView)
+            } catch (_: Exception) {
+            }
+        }
+        isMuted = false
+        floatingView = LayoutInflater.from(this).inflate(
+            if (mode == "buttons") R.layout.floating_buttons
+            else R.layout.floating_overlay,
+            null
+        )
+        floatingView.alpha = opacityOf(this)
+        windowManager.addView(floatingView, p)
+        currentMode = mode
+        if (mode == "buttons") setupButtons() else setupBar()
+    }
+
+    private fun tick(v: View, strong: Boolean = false) {
+        if (!hapticsOf(this)) return
+        v.performHapticFeedback(
+            if (strong) HapticFeedbackConstants.LONG_PRESS
+            else HapticFeedbackConstants.VIRTUAL_KEY
+        )
+    }
+
+    private fun showSlider() {
+        audio.adjustStreamVolume(
+            AudioManager.STREAM_MUSIC,
+            AudioManager.ADJUST_SAME,
+            AudioManager.FLAG_SHOW_UI
+        )
+    }
+
+    // ---------- Edge-bar mode ----------
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupBar() {
+        val dock: Button = floatingView.findViewById(R.id.btnDock)
         val slop = ViewConfiguration.get(this).scaledTouchSlop
         val longPressTimeout = ViewConfiguration.getLongPressTimeout().toLong()
         val handler = Handler(Looper.getMainLooper())
@@ -135,15 +205,12 @@ class FloatingVolumeService : Service() {
         val longPressTask = Runnable {
             if (!dragging) {
                 longPressed = true
-                dock.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                tick(dock, strong = true)
                 Toast.makeText(this, "Bar hidden", Toast.LENGTH_SHORT).show()
                 stopSelf()
             }
         }
 
-        // Listener on the bar itself: the Button consumes touches on the
-        // visible strip, so a listener on the transparent container would
-        // never see taps landing on the bar.
         dock.setOnTouchListener { v, e ->
             val p = params ?: return@setOnTouchListener false
             when (e.action) {
@@ -178,13 +245,8 @@ class FloatingVolumeService : Service() {
                         snapToEdge(p)
                         windowManager.updateViewLayout(floatingView, p)
                     } else if (!longPressed) {
-                        v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                        // Show the system volume slider without changing volume.
-                        audio.adjustStreamVolume(
-                            AudioManager.STREAM_MUSIC,
-                            AudioManager.ADJUST_SAME,
-                            AudioManager.FLAG_SHOW_UI
-                        )
+                        tick(v)
+                        showSlider()
                     }
                     dragging = false
                     longPressed = false
@@ -199,6 +261,117 @@ class FloatingVolumeService : Service() {
                 else -> false
             }
         }
+    }
+
+    // ---------- Buttons mode ----------
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupButtons() {
+        val btnMute: Button = floatingView.findViewById(R.id.btnMute)
+
+        floatingView.findViewById<Button>(R.id.btnVolUp).setOnClickListener {
+            tick(it)
+            isMuted = false
+            btnMute.text = "MUTE"
+            audio.adjustStreamVolume(
+                AudioManager.STREAM_MUSIC,
+                AudioManager.ADJUST_RAISE,
+                AudioManager.FLAG_SHOW_UI
+            )
+        }
+
+        floatingView.findViewById<Button>(R.id.btnVolDown).setOnClickListener {
+            tick(it)
+            isMuted = false
+            btnMute.text = "MUTE"
+            audio.adjustStreamVolume(
+                AudioManager.STREAM_MUSIC,
+                AudioManager.ADJUST_LOWER,
+                AudioManager.FLAG_SHOW_UI
+            )
+        }
+
+        btnMute.setOnClickListener {
+            tick(it)
+            if (!isMuted) {
+                savedMusicVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC)
+                if (savedMusicVolume == 0) {
+                    savedMusicVolume = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC) / 2
+                }
+                audio.adjustStreamVolume(
+                    AudioManager.STREAM_MUSIC,
+                    AudioManager.ADJUST_MUTE,
+                    AudioManager.FLAG_SHOW_UI
+                )
+                isMuted = true
+                btnMute.text = "UNMUTE"
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    audio.adjustStreamVolume(
+                        AudioManager.STREAM_MUSIC,
+                        AudioManager.ADJUST_UNMUTE,
+                        AudioManager.FLAG_SHOW_UI
+                    )
+                }
+                if (savedMusicVolume > 0) {
+                    audio.setStreamVolume(
+                        AudioManager.STREAM_MUSIC,
+                        savedMusicVolume,
+                        AudioManager.FLAG_SHOW_UI
+                    )
+                }
+                isMuted = false
+                btnMute.text = "MUTE"
+            }
+        }
+
+        floatingView.findViewById<Button>(R.id.btnClose).setOnClickListener {
+            tick(it)
+            stopSelf()
+        }
+
+        // Drag from the pill background; buttons keep their own taps.
+        val slop = ViewConfiguration.get(this).scaledTouchSlop
+        floatingView.setOnTouchListener(object : View.OnTouchListener {
+            var downRawX = 0
+            var downRawY = 0
+            var initX = 0
+            var initY = 0
+            var dragging = false
+
+            override fun onTouch(v: View, e: MotionEvent): Boolean {
+                val p = params ?: return false
+                when (e.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        downRawX = e.rawX.toInt()
+                        downRawY = e.rawY.toInt()
+                        initX = p.x
+                        initY = p.y
+                        dragging = false
+                        return true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        val dx = e.rawX.toInt() - downRawX
+                        val dy = e.rawY.toInt() - downRawY
+                        if (!dragging && dx * dx + dy * dy < slop * slop) {
+                            return true
+                        }
+                        dragging = true
+                        p.x = initX + dx
+                        p.y = initY + dy
+                        clampToScreen(p)
+                        windowManager.updateViewLayout(floatingView, p)
+                        return true
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        val wasDrag = dragging
+                        dragging = false
+                        return wasDrag
+                    }
+                }
+                return false
+            }
+        })
     }
 
     private fun clampToScreen(p: WindowManager.LayoutParams) {
@@ -217,24 +390,10 @@ class FloatingVolumeService : Service() {
         else max(metrics.widthPixels - w, 0)
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        // Rotation changes screen dimensions: absolute x/y would leave
-        // the bar floating mid-screen, so re-clamp and re-dock it.
-        val p = params ?: return
-        if (!::floatingView.isInitialized) return
-        clampToScreen(p)
-        snapToEdge(p)
-        try {
-            windowManager.updateViewLayout(floatingView, p)
-        } catch (_: Exception) {
-        }
-    }
-
     override fun onDestroy() {
         isRunning = false
         try {
-            windowManager.removeView(floatingView)
+            if (::floatingView.isInitialized) windowManager.removeView(floatingView)
         } catch (_: Exception) {
         }
         super.onDestroy()
