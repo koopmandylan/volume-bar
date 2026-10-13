@@ -1,1 +1,1 @@
-{"notes": "Settings section (bar or +/- buttons, opacity, haptics, dark/light theme), in-app changelog with what's-new popup. Settings survive updates.", "apkUrl": "https://github.com/koopmandylan/volume-bar/releases/download/v1.5/app.apk", "versionCode": 6, "versionName": "1.5"}
+{"notes": "Shows startup errors on screen instead of silently closing.", "apkUrl": "https://github.com/koopmandylan/volume-bar/releases/download/v1.6/app.apk", "versionCode": 7, "versionName": "1.6"}

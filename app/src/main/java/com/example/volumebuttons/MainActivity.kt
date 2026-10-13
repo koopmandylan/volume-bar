@@ -3,10 +3,13 @@ package com.example.volumebuttons
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.text.method.ScrollingMovementMethod
+import android.view.Gravity
 import android.widget.Button
 import android.widget.RadioGroup
 import android.widget.SeekBar
@@ -24,10 +27,11 @@ import com.example.volumebuttons.FloatingVolumeService.Companion.KEY_LAST_SEEN
 import com.example.volumebuttons.FloatingVolumeService.Companion.KEY_MODE
 import com.example.volumebuttons.FloatingVolumeService.Companion.KEY_OPACITY
 import com.example.volumebuttons.FloatingVolumeService.Companion.KEY_THEME
-import com.example.volumebuttons.FloatingVolumeService.Companion.PREFS
 import com.example.volumebuttons.FloatingVolumeService.Companion.UPDATE_URL
 import com.example.volumebuttons.FloatingVolumeService.Companion.isRunning
 import com.example.volumebuttons.FloatingVolumeService.Companion.prefsOf
+import java.io.PrintWriter
+import java.io.StringWriter
 
 class MainActivity : AppCompatActivity() {
 
@@ -37,8 +41,16 @@ class MainActivity : AppCompatActivity() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        applySavedTheme()
         super.onCreate(savedInstanceState)
+        try {
+            create()
+        } catch (e: Exception) {
+            showError(e)
+        }
+    }
+
+    private fun create() {
+        applySavedTheme()
         setContentView(R.layout.activity_main)
 
         if (Build.VERSION.SDK_INT >= 33 &&
@@ -136,6 +148,27 @@ class MainActivity : AppCompatActivity() {
         runUpdateCheck(manual = false)
 
         maybeShowWhatsNew()
+    }
+
+    /** Last resort: show the crash instead of just closing. */
+    private fun showError(e: Exception) {
+        val sw = StringWriter()
+        e.printStackTrace(PrintWriter(sw))
+        val report = "${e.javaClass.simpleName}: ${e.message}\n\n${sw}".take(2000)
+        val tv = TextView(this).apply {
+            text = "Startup failed, send this to the dev:\n\n$report"
+            textSize = 13f
+            typeface = Typeface.MONOSPACE
+            setPadding(32, 32, 32, 32)
+            gravity = Gravity.START
+            setTextIsSelectable(true)
+            movementMethod = ScrollingMovementMethod()
+        }
+        try {
+            setContentView(tv)
+        } catch (_: Exception) {
+            Toast.makeText(this, report.take(500), Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun startService() {

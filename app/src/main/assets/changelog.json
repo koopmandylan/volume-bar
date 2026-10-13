@@ -1,5 +1,6 @@
 [
-  {"version": "1.5", "code": 6, "notes": "Settings section (bar/buttons mode, opacity, haptics, theme), dark theme control, in-app changelog with what's-new on update. Settings survive upgrades."},
+  {"version": "1.6", "code": 7, "notes": "Startup crash diagnostics: if the app ever fails to open, it now shows the error on screen instead of just closing."},
+  {"version": "1.5", "code": 6, "notes": "Settings section (bar or +/- buttons, opacity, haptics, dark/light theme), in-app changelog with what's-new popup. Settings survive updates."},
   {"version": "1.4", "code": 5, "notes": "Opacity slider goes to 0%: fully invisible bar that still responds to tap, drag and long-press."},
   {"version": "1.3", "code": 4, "notes": "Bar re-docks to the screen edge on rotation instead of floating mid-screen."},
   {"version": "1.2", "code": 3, "notes": "Update check tells you plainly: new version available, latest installed, or server unreachable."},
