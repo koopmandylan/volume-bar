@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VolumeButtons</string>
+    <string name="app_subtitle">Replacement for broken hardware volume keys</string>
+    <string name="volume_down">Volume Down</string>
+    <string name="volume_up">Volume Up</string>
+    <string name="mute_unmute">Mute or Unmute</string>
+    <string name="audio_stream">Audio Stream</string>
+    <string name="close_overlay">Close Overlay</string>
+    <string name="show_floating_volume">Show floating volume</string>
+    <string name="hide_floating_volume">Hide floating volume</string>
+    <string name="status_active">Overlay Active</string>
+    <string name="status_inactive">Overlay Inactive</string>
+    <string name="status_active_sub">Floating volume controls are currently displayed on screen</string>
+    <string name="status_inactive_sub">Tap show button below to enable floating overlay</string>
+    <string name="stream_media">Media</string>
+    <string name="stream_ring">Ring</string>
+    <string name="stream_alarm">Alarm</string>
+    <string name="stream_call">Call</string>
+    <string name="stream_notification">Notify</string>
+    <string name="audio_stream_settings">Audio Stream Settings</string>
+    <string name="haptic_feedback">Haptic Feedback</string>
+    <string name="haptic_summary">Vibrate briefly when pressing volume keys</string>
+    <string name="select_stream">Default Audio Stream</string>
+    <string name="reset_position">Reset Overlay Position</string>
+    <string name="notification_title">Volume buttons active</string>
+    <string name="notification_text">Tap + / - to change volume</string>
+</resources>
