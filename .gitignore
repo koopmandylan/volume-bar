@@ -9,3 +9,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+# Release APKs live on GitHub Releases, not in git
+app.apk

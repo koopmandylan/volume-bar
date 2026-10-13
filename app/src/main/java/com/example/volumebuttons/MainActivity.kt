@@ -19,8 +19,9 @@ import androidx.core.content.ContextCompat
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        // YOUR Rocky server: static file over LAN http.
-        const val UPDATE_URL = "http://192.168.1.10/volume/version.json"
+        // Static file: no server to maintain, works over any network.
+        const val UPDATE_URL =
+            "https://raw.githubusercontent.com/koopmandylan/volume-bar/main/version.json"
     }
 
     private val notifPermission =
