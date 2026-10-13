@@ -60,7 +60,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Dock opacity"
+                    android:text="Dock opacity (0% = invisible, still works)"
                     android:textAppearance="?attr/textAppearanceTitleSmall"
                     android:layout_marginBottom="8dp" />
 

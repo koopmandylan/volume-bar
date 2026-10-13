@@ -46,16 +46,16 @@ class MainActivity : AppCompatActivity() {
         val opacitySeek = findViewById<SeekBar>(R.id.opacitySeek)
         val opacityValue = findViewById<TextView>(R.id.opacityValue)
 
-        // SeekBar range 30..100.
-        opacitySeek.max = 70
+        // SeekBar range 0..100. 0% = invisible bar that still works.
+        opacitySeek.max = 100
         opacitySeek.progress =
             prefs.getInt(FloatingVolumeService.KEY_OPACITY,
-                FloatingVolumeService.DEFAULT_OPACITY) - 30
-        opacityValue.text = "${opacitySeek.progress + 30}%"
+                FloatingVolumeService.DEFAULT_OPACITY)
+        opacityValue.text = "${opacitySeek.progress}%"
 
         opacitySeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seek: SeekBar?, progress: Int, fromUser: Boolean) {
-                val pct = progress + 30
+                val pct = progress
                 opacityValue.text = "$pct%"
                 prefs.edit().putInt(FloatingVolumeService.KEY_OPACITY, pct).apply()
                 // Live-update the visible bar, if any.

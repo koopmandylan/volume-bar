@@ -32,7 +32,7 @@ class FloatingVolumeService : Service() {
     companion object {
         const val ACTION_UPDATE_OPACITY = "com.example.volumebuttons.UPDATE_OPACITY"
         const val PREFS = "dock_prefs"
-        const val KEY_OPACITY = "opacity" // 30..100
+        const val KEY_OPACITY = "opacity" // 0..100, 0 = invisible but still tappable
         const val DEFAULT_OPACITY = 85
 
         @Volatile
@@ -40,7 +40,7 @@ class FloatingVolumeService : Service() {
 
         fun opacityOf(context: Context): Float {
             val pct = context.getSharedPreferences(PREFS, MODE_PRIVATE)
-                .getInt(KEY_OPACITY, DEFAULT_OPACITY).coerceIn(30, 100)
+                .getInt(KEY_OPACITY, DEFAULT_OPACITY).coerceIn(0, 100)
             return pct / 100f
         }
     }
