@@ -26,13 +26,23 @@ object UpdateChecker {
         val notes: String
     )
 
-    /** Null = no update available OR server unreachable (keep it simple). */
-    fun checkForUpdate(context: Context, updateUrl: String, cb: (UpdateInfo?) -> Unit) {
+    sealed interface CheckResult {
+        data class Available(val info: UpdateInfo) : CheckResult
+        data object Latest : CheckResult
+        data object Unreachable : CheckResult
+    }
+
+    fun checkForUpdate(context: Context, updateUrl: String, cb: (CheckResult) -> Unit) {
         thread {
             try {
                 val conn = (URL(updateUrl).openConnection() as HttpURLConnection).apply {
                     connectTimeout = 8000
                     readTimeout = 8000
+                }
+                val code = conn.responseCode
+                if (code !in 200..299) {
+                    cb(CheckResult.Unreachable)
+                    return@thread
                 }
                 val body = conn.inputStream.bufferedReader().readText()
                 conn.disconnect()
@@ -49,9 +59,12 @@ object UpdateChecker {
                 } else {
                     @Suppress("DEPRECATION") pm.versionCode
                 }
-                cb(if (info.versionCode > current) info else null)
+                cb(
+                    if (info.versionCode > current) CheckResult.Available(info)
+                    else CheckResult.Latest
+                )
             } catch (_: Exception) {
-                cb(null)
+                cb(CheckResult.Unreachable)
             }
         }
     }

@@ -106,26 +106,39 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun runUpdateCheck(manual: Boolean) {
-        UpdateChecker.checkForUpdate(this, UPDATE_URL) { info ->
+        UpdateChecker.checkForUpdate(this, UPDATE_URL) { result ->
             runOnUiThread {
-                if (info == null) {
-                    if (manual) {
-                        Toast.makeText(
-                            this,
-                            "No update (or server unreachable)",
-                            Toast.LENGTH_LONG
-                        ).show()
+                when (result) {
+                    is UpdateChecker.CheckResult.Available -> {
+                        val info = result.info
+                        AlertDialog.Builder(this)
+                            .setTitle("Update ${info.versionName} available")
+                            .setMessage(info.notes.ifBlank { "New version ready to install." })
+                            .setPositiveButton("Download & install") { _, _ ->
+                                UpdateChecker.downloadAndInstall(this, info)
+                            }
+                            .setNegativeButton("Later", null)
+                            .show()
                     }
-                    return@runOnUiThread
+                    is UpdateChecker.CheckResult.Latest -> {
+                        if (manual) {
+                            Toast.makeText(
+                                this,
+                                "You're on the latest version",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                    is UpdateChecker.CheckResult.Unreachable -> {
+                        if (manual) {
+                            Toast.makeText(
+                                this,
+                                "Couldn't reach the update server - check your connection",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
                 }
-                AlertDialog.Builder(this)
-                    .setTitle("Update ${info.versionName} available")
-                    .setMessage(info.notes.ifBlank { "New version ready to install." })
-                    .setPositiveButton("Download & install") { _, _ ->
-                        UpdateChecker.downloadAndInstall(this, info)
-                    }
-                    .setNegativeButton("Later", null)
-                    .show()
             }
         }
     }

@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.media.AudioManager
 import android.os.Build
@@ -214,6 +215,20 @@ class FloatingVolumeService : Service() {
         val centerX = p.x + w / 2
         p.x = if (centerX < metrics.widthPixels / 2) 0
         else max(metrics.widthPixels - w, 0)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // Rotation changes screen dimensions: absolute x/y would leave
+        // the bar floating mid-screen, so re-clamp and re-dock it.
+        val p = params ?: return
+        if (!::floatingView.isInitialized) return
+        clampToScreen(p)
+        snapToEdge(p)
+        try {
+            windowManager.updateViewLayout(floatingView, p)
+        } catch (_: Exception) {
+        }
     }
 
     override fun onDestroy() {
