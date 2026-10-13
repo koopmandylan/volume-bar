@@ -78,13 +78,13 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp">
 
-                    <com.google.android.material.radio.MaterialRadioButton
+                    <RadioButton
                         android:id="@+id/modeBar"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Edge bar (default)" />
 
-                    <com.google.android.material.radio.MaterialRadioButton
+                    <RadioButton
                         android:id="@+id/modeButtons"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -143,19 +143,19 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                    <com.google.android.material.radio.MaterialRadioButton
+                    <RadioButton
                         android:id="@+id/themeDark"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Dark (default)" />
 
-                    <com.google.android.material.radio.MaterialRadioButton
+                    <RadioButton
                         android:id="@+id/themeLight"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Light" />
 
-                    <com.google.android.material.radio.MaterialRadioButton
+                    <RadioButton
                         android:id="@+id/themeSystem"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
